@@ -20,11 +20,11 @@ This project is a Content Security Policy (CSP) Reporting engine built to work w
     CSP_REPORTING_ENABLED=true
     ```
 
-   The default route for the CSP Reporting engine is `/csp-reporting/csp-report`.
+   The default route for the CSP Reporting engine is `/csp-reporting/report`.
 
-   To adjust the route suffix `csp-report` you can add an environment variable:
+   To adjust the route suffix `report` you can add an environment variable:
     ```env
-    CSP_REPORTING_URI=/csp-report
+    CSP_REPORTING_URI=/different-path
     ```
    
    If you'd like to customise the route prefix or middleware you can do so in the configuration file.
@@ -36,7 +36,7 @@ This project is a Content Security Policy (CSP) Reporting engine built to work w
    ```
 4. If using Spatie's Laravel CSP package, you can add the following to the `report-uri` directive in your CSP header:
     ```php
-    'report-uri' => route('csp-reporting.csp-report')
+    'report-uri' => 'https://www.yourdomain.com/csp-reporting/report',
     ```
 
 5. To silence some CSP Reports you can add a Laravel Event Listener to listen to the CspViolationReportReceived Event
@@ -95,22 +95,18 @@ To send a CSP violation report, make a POST request to the configured URI (defau
 
 ```json
 {
-    "age": 53531,
-    "body": {
-        "blockedURL": "inline",
-        "columnNumber": 39,
-        "disposition": "enforce",
-        "documentURL": "https://example.com/csp-report",
-        "effectiveDirective": "script-src-elem",
-        "lineNumber": 121,
-        "originalPolicy": "default-src 'self'; report-to csp-endpoint-name",
-        "referrer": "https://www.google.com/",
-        "sample": "console.log(\"lo\")",
-        "sourceFile": "https://example.com/csp-report",
-        "statusCode": 200
-    },
-    "type": "csp-violation",
-    "url": "https://example.com/csp-report",
-    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
+    "csp-report": {
+        "document-uri": "https://yoursite.com/vulnerablepage",
+        "referrer": "",
+        "violated-directive": "script-src-attr",
+        "effective-directive": "script-src-attr",
+        "original-policy": "default-src 'self'; script-src 'report-sample' 'self' https://www.google-analytics.com/analytics.js https://www.googletagmanager.com/gtag/js; style-src 'report-sample' 'self'; report-uri https://yoursite.com/csp-reporting/report;",
+        "disposition": "enforced",
+        "blocked-uri": "inline",
+        "line-number": 1,
+        "source-file": "https://yoursite.com/vulnerablepage",
+        "status-code": 0,
+        "script-sample": "alert(1)"
+    }
 }
 ```

@@ -12,10 +12,10 @@ class CspReportingController extends Controller
 {
     public function __invoke(Request $request)
     {
-        Event::dispatch($event = new CspViolationReportReceived($request->json()));
-
+        Event::dispatch($event = new CspViolationReportReceived($request->json('csp-report')));
+        dump($event);
         // If the CspViolationReportReceived event tells it to report, throw an exception
-        throw_if($event->shouldReport, CspViolationReportException::class, $event->violationReport->all());
+        report_if($event->shouldReport, new CspViolationReportException($event->violationReport));
 
         return 'ok';
     }

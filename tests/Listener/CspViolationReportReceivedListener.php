@@ -8,6 +8,8 @@ class CspViolationReportReceivedListener
 {
     public function handle(CspViolationReportReceived $event): void
     {
-        $event->shouldReport = false;
+        if ($event->violationReport['script-sample'] === 'alert(1)') {
+            $event->shouldReport = false;
+        }
     }
 }

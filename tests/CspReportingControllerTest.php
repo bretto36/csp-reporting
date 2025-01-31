@@ -11,29 +11,29 @@ class CspReportingControllerTest extends TestCase
 {
     public function test_csp_report_is_reported()
     {
-        $this->expectException(CspViolationReportException::class);
+        // This only works for Laravel 11
+        $this->assertReported(CspViolationReportException::class);
+
+        Event::fake();
 
         $this->withoutExceptionHandling()->postJson(route('csp-reporting.report'), json_decode('{
-          "age": 53531,
-          "body": {
-            "blockedURL": "inline",
-            "columnNumber": 39,
-            "disposition": "enforce",
-            "documentURL": "https://example.com/csp-report",
-            "effectiveDirective": "script-src-elem",
-            "lineNumber": 121,
-            "originalPolicy": "default-src \'self\'; report-to csp-endpoint-name",
-            "referrer": "https://www.google.com/",
-            "sample": "console.log(\"lo\")",
-            "sourceFile": "https://example.com/csp-report",
-            "statusCode": 200
-          },
-          "type": "csp-violation",
-          "url": "https://example.com/csp-report",
-          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
-        }', true));
+            "csp-report": {
+                "document-uri": "https://yoursite.com/vulnerablepage",
+                "referrer": "",
+                "violated-directive": "script-src-attr",
+                "effective-directive": "script-src-attr",
+                "original-policy": "default-src \'self\'; script-src \'report-sample\' \'self\' https://www.google-analytics.com/analytics.js https://www.googletagmanager.com/gtag/js; style-src \'report-sample\' \'self\'; report-uri https://yoursite.com/csp-reporting/report;",
+                "disposition": "enforced",
+                "blocked-uri": "inline",
+                "line-number": 1,
+                "source-file": "https://yoursite.com/vulnerablepage",
+                "status-code": 0,
+                "script-sample": "alert(1)"
+            }
+        }', true), ['Content-Type' => 'application/csp-report']);
 
         Event::assertDispatched(CspViolationReportReceived::class);
+
     }
 
     public function test_csp_report_is_skipped()
@@ -41,24 +41,42 @@ class CspReportingControllerTest extends TestCase
         Event::listen(CspViolationReportReceived::class, CspViolationReportReceivedListener::class);
 
         $this->postJson(route('csp-reporting.report'), json_decode('{
-          "age": 53531,
-          "body": {
-            "blockedURL": "inline",
-            "columnNumber": 39,
-            "disposition": "enforce",
-            "documentURL": "https://example.com/csp-report",
-            "effectiveDirective": "script-src-elem",
-            "lineNumber": 121,
-            "originalPolicy": "default-src \'self\'; report-to csp-endpoint-name",
-            "referrer": "https://www.google.com/",
-            "sample": "console.log(\"lo\")",
-            "sourceFile": "https://example.com/csp-report",
-            "statusCode": 200
-          },
-          "type": "csp-violation",
-          "url": "https://example.com/csp-report",
-          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
-        }', true))
+            "csp-report": {
+                "document-uri": "https://yoursite.com/vulnerablepage",
+                "referrer": "",
+                "violated-directive": "script-src-attr",
+                "effective-directive": "script-src-attr",
+                "original-policy": "default-src \'self\'; script-src \'report-sample\' \'self\' https://www.google-analytics.com/analytics.js https://www.googletagmanager.com/gtag/js; style-src \'report-sample\' \'self\'; report-uri https://yoursite.com/csp-reporting/report;",
+                "disposition": "enforced",
+                "blocked-uri": "inline",
+                "line-number": 1,
+                "source-file": "https://yoursite.com/vulnerablepage",
+                "status-code": 0,
+                "script-sample": "alert(1)"
+            }
+        }', true), ['Content-Type' => 'application/csp-report'])
+            ->assertOk();
+    }
+
+    public function test_csp_report_is_not_skipped()
+    {
+        Event::listen(CspViolationReportReceived::class, CspViolationReportReceivedListener::class);
+
+        $this->postJson(route('csp-reporting.report'), json_decode('{
+            "csp-report": {
+                "document-uri": "https://yoursite.com/vulnerablepage",
+                "referrer": "",
+                "violated-directive": "script-src-attr",
+                "effective-directive": "script-src-attr",
+                "original-policy": "default-src \'self\'; script-src \'report-sample\' \'self\' https://www.google-analytics.com/analytics.js https://www.googletagmanager.com/gtag/js; style-src \'report-sample\' \'self\'; report-uri https://yoursite.com/csp-reporting/report;",
+                "disposition": "enforced",
+                "blocked-uri": "inline",
+                "line-number": 1,
+                "source-file": "https://yoursite.com/vulnerablepage",
+                "status-code": 0,
+                "script-sample": "alert(\'hello\')"
+            }
+        }', true), ['Content-Type' => 'application/csp-report'])
             ->assertOk();
     }
 }
