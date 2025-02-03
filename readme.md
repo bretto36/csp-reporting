@@ -38,8 +38,9 @@ This project is a Content Security Policy (CSP) Reporting engine built to work w
     ```php
     'report-uri' => 'https://www.yourdomain.com/csp-reporting/report',
     ```
+5. Make sure to include the route in the VerifyCsrfToken middleware as excluded - 'csp-reporting/*',
 
-5. To silence some CSP Reports you can add a Laravel Event Listener to listen to the CspViolationReportReceived Event
+6. To silence some CSP Reports you can add a Laravel Event Listener to listen to the CspViolationReportReceived Event
     ```php
     use Bretto36\CspReporting\Events\CspViolationReportReceived;
     use Illuminate\Support\Facades\Event;
