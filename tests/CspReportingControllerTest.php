@@ -6,13 +6,13 @@ use Bretto36\CspReporting\Event\CspViolationReportReceived;
 use Bretto36\CspReporting\Exception\CspViolationReportException;
 use Bretto36\CspReporting\Tests\Listener\CspViolationReportReceivedListener;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Exceptions;
 
 class CspReportingControllerTest extends TestCase
 {
     public function test_csp_report_is_reported()
     {
-        // This only works for Laravel 11
-        $this->assertReported(CspViolationReportException::class);
+        Exceptions::fake();
 
         Event::fake();
 
@@ -34,6 +34,8 @@ class CspReportingControllerTest extends TestCase
 
         Event::assertDispatched(CspViolationReportReceived::class);
 
+        // This only works for Laravel 11
+        Exceptions::assertReported(CspViolationReportException::class);
     }
 
     public function test_csp_report_is_skipped()
